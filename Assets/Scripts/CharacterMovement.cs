@@ -173,7 +173,7 @@ public class CharacterMovement : MonoBehaviour
         if (moveDirection.sqrMagnitude > 0.01f)
         {
             Quaternion targetRotation = Quaternion.LookRotation(moveDirection, Vector3.up);
-            rb.rotation = Quaternion.Slerp(rb.rotation, targetRotation, rotationSpeed * Time.fixedDeltaTime);
+            rb.rotation = Quaternion.Slerp(rb.rotation, targetRotation, rotationSpeed * 2 * Time.fixedDeltaTime);
         }
     }
 
