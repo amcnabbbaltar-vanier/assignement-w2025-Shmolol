@@ -1,31 +1,40 @@
-using UnityEngine;
 using Cinemachine;
+using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))] // Ensures that a Rigidbody component is attached to the GameObject
 public class CharacterMovement : MonoBehaviour
 {
     // ============================== Movement Settings ==============================
     [Header("Movement Settings")]
-    [SerializeField] private float baseWalkSpeed = 5f;    // Base speed when walking
-    [SerializeField] private float baseRunSpeed = 8f;     // Base speed when running
-    [SerializeField] private float rotationSpeed = 10f;   // Speed at which the character rotates
+    [SerializeField]
+    private float baseWalkSpeed = 5f; // Base speed when walking
+
+    [SerializeField]
+    private float baseRunSpeed = 8f; // Base speed when running
+
+    [SerializeField]
+    private float rotationSpeed = 10f; // Speed at which the character rotates
 
     // ============================== Jump Settings =================================
     [Header("Jump Settings")]
-    [SerializeField] private float jumpForce = 5f;        // Jump force applied to the character
-    [SerializeField] private float groundCheckDistance = 1.1f; // Distance to check for ground contact (Raycast)
+    [SerializeField]
+    private float jumpForce = 5f; // Jump force applied to the character
+
+    [SerializeField]
+    private float groundCheckDistance = 1.05f; // Distance to check for ground contact (Raycast)
 
     // ============================== Modifiable from other scripts ==================
     public float speedMultiplier = 1.0f; // Additional multiplier for character speed ( WINK WINK )
 
     // ============================== Private Variables ==============================
-    private Rigidbody rb; // Reference to the Rigidbody component
+    public Rigidbody rb; // Reference to the Rigidbody component. (Had to make public for animator)
     private Transform cameraTransform; // Reference to the camera's transform
 
     // Input variables
     private float moveX; // Stores horizontal movement input (A/D or Left/Right Arrow)
     private float moveZ; // Stores vertical movement input (W/S or Up/Down Arrow)
-    private bool jumpRequest; // Flag to check if the player requested a jump
+    public bool jumpRequest; // Flag to check if the player requested a jump (made public for animator)
+    public bool canDoubleJump = false; // Flag to check if the player can double jump (made public for animator)
     private Vector3 moveDirection; // Stores the calculated movement direction
 
     // ============================== Animation Variables ==============================
@@ -37,7 +46,7 @@ public class CharacterMovement : MonoBehaviour
     /// Checks if the character is currently grounded using a Raycast.
     /// If false, the character is in the air.
     /// </summary>
-    public bool IsGrounded => 
+    public bool IsGrounded =>
         Physics.Raycast(transform.position + Vector3.up * 0.1f, Vector3.down, groundCheckDistance);
 
     /// <summary>
@@ -100,7 +109,7 @@ public class CharacterMovement : MonoBehaviour
     private void RegisterInput()
     {
         moveX = Input.GetAxis("Horizontal"); // Get horizontal movement input
-        moveZ = Input.GetAxis("Vertical");   // Get vertical movement input
+        moveZ = Input.GetAxis("Vertical"); // Get vertical movement input
 
         // Register a jump request if the player presses the Jump button
         if (Input.GetButtonDown("Jump"))
@@ -118,6 +127,7 @@ public class CharacterMovement : MonoBehaviour
     {
         CalculateMoveDirection(); // Compute the movement direction based on input
         HandleJump(); // Process jump input
+        HandleDoubleJump(); // Process double jump
         RotateCharacter(); // Rotate the character towards the movement direction
         MoveCharacter(); // Move the character using velocity-based movement
     }
@@ -161,6 +171,20 @@ public class CharacterMovement : MonoBehaviour
         {
             rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse); // Apply force upwards
             jumpRequest = false; // Reset jump request after applying jump
+            canDoubleJump = true; // Allow player to double jump once airborn
+        }
+    }
+
+    /// <summary>
+    /// Handles double jumping by applying an impulse force if the character is in the air.
+    /// </summary>
+    private void HandleDoubleJump() // change so that double jump is only allowed when blue powerup is picked up
+    {
+        if (jumpRequest && !IsGrounded && canDoubleJump)
+        {
+            rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse); // Apply force upwards
+            jumpRequest = false; // Reset jump request after applying jump
+            canDoubleJump = false; // Disable double jump until player jumps normally
         }
     }
 
@@ -173,7 +197,11 @@ public class CharacterMovement : MonoBehaviour
         if (moveDirection.sqrMagnitude > 0.01f)
         {
             Quaternion targetRotation = Quaternion.LookRotation(moveDirection, Vector3.up);
-            rb.rotation = Quaternion.Slerp(rb.rotation, targetRotation, rotationSpeed * 2 * Time.fixedDeltaTime);
+            rb.rotation = Quaternion.Slerp(
+                rb.rotation,
+                targetRotation,
+                rotationSpeed * 2 * Time.fixedDeltaTime
+            );
         }
     }
 
@@ -185,13 +213,13 @@ public class CharacterMovement : MonoBehaviour
     {
         // Determine movement speed (walking or running)
         float speed = IsRunning ? baseRunSpeed : baseWalkSpeed;
-        
+
         // Set ground speed value for animation purposes
         groundSpeed = (moveDirection != Vector3.zero) ? speed : 0.0f;
 
         // Preserve the current Y velocity to maintain gravity effects
         Vector3 newVelocity = new Vector3(
-            moveDirection.x * speed * speedMultiplier, 
+            moveDirection.x * speed * speedMultiplier,
             rb.velocity.y, // Keep the existing Y velocity for jumping & gravity
             moveDirection.z * speed * speedMultiplier
         );
