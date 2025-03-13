@@ -7,7 +7,7 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager Instance;
     public int score = 0;
-    public int targetScore = 4; // idk if i need this im just copying the lab rn
+    public int currentScore = 0;
 
     void Awake()
     {
@@ -25,22 +25,26 @@ public class GameManager : MonoBehaviour
 
     public void IncrementScore()
     {
-        score += 50; // im pretty sure imma use this for the green powerup
-        Debug.Log("Score: " + score);
+        currentScore += 50; // im pretty sure imma use this for the green powerup
+        Debug.Log("Score: " + currentScore);
     }
 
     public void RestartScene()
     {
+        currentScore = score;
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
     public void LoadNextScene()
     {
+        score = currentScore;
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
     }
 
     public void QuitToMenu()
     {
+        score = 0;
+        currentScore = 0;
         SceneManager.LoadScene("MainMenu");
     }
 

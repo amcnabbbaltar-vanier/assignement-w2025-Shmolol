@@ -7,9 +7,10 @@ public class OrangePowerUpComponent : MonoBehaviour
     private Renderer targetRenderer;
     private new Collider collider;
     private MeshRenderer mesh;
-    private float rotateSpeed = 80f;
+    private float rotateSpeed;
     private Vector3 startPos;
     private ParticleSystem collectParticles;
+    private float boostDuration;
 
     // Start is called before the first frame update
     void Start()
@@ -18,6 +19,8 @@ public class OrangePowerUpComponent : MonoBehaviour
         collider = GetComponent<Collider>();
         collectParticles = GetComponent<ParticleSystem>();
         mesh = GetComponent<MeshRenderer>();
+        rotateSpeed = 80f;
+        boostDuration = 5f;
     }
 
     // Update is called once per frame
@@ -39,8 +42,12 @@ public class OrangePowerUpComponent : MonoBehaviour
 
     private void Pickup(Collider player)
     {
-        // Implement the powerup funtionality
-
+        CharacterMovement movement = player.GetComponent<CharacterMovement>();
+        if (movement != null)
+        {
+            Debug.Log("Power-up collected! Applying speed boost...");
+            StartCoroutine(ApplySpeedBoost(movement));
+        }
         // Detach particle system so it plays independently
         collectParticles.transform.SetParent(null);
         collectParticles.Play();
@@ -49,12 +56,37 @@ public class OrangePowerUpComponent : MonoBehaviour
         mesh.enabled = false;
         collider.enabled = false;
 
-        // Destroy after particles finish playing
-        Invoke("DisablePowerUp", collectParticles.main.duration);
+        // Disable after particles finish playing
+        StartCoroutine(DisablePowerUp());
     }
 
-    private void DisablePowerUp()
+    private IEnumerator ApplySpeedBoost(CharacterMovement movement)
     {
+        // Apply the speed boost by multiplying base speeds with speedMultiplier
+        movement.baseWalkSpeed *= movement.speedMultiplier;
+        movement.baseRunSpeed *= movement.speedMultiplier;
+
+        Debug.Log(
+            $"Speed boosted! Walk Speed: {movement.baseWalkSpeed}, Run Speed: {movement.baseRunSpeed}"
+        );
+
+        yield return new WaitForSeconds(boostDuration);
+
+        // Revert back to original speeds
+        movement.baseWalkSpeed /= movement.speedMultiplier;
+        movement.baseRunSpeed /= movement.speedMultiplier;
+
+        Debug.Log(
+            $"Speed reset. Walk Speed: {movement.baseWalkSpeed}, Run Speed: {movement.baseRunSpeed}"
+        );
+    }
+
+    private IEnumerator DisablePowerUp()
+    {
+        // Wait until BOTH the speed boost and particle effect are finished
+        yield return new WaitForSeconds(boostDuration);
+        yield return new WaitForSeconds(collectParticles.main.duration);
+
         gameObject.SetActive(false);
     }
 }

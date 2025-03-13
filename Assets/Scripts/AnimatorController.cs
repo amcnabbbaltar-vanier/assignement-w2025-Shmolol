@@ -25,7 +25,12 @@ public class AnimatorController : MonoBehaviour
         animator.SetBool("IsGrounded", characterMovement.IsGrounded);
         animator.SetBool("CanDoubleJump", characterMovement.canDoubleJump);
 
-        if (characterMovement.jumpRequest && !characterMovement.IsGrounded && characterMovement.canDoubleJump)
+        if (
+            characterMovement.jumpRequest
+            && !characterMovement.IsGrounded
+            && characterMovement.canDoubleJump
+            && characterMovement.hasPowerUp
+        )
         {
             animator.SetTrigger("doFlip");
         }

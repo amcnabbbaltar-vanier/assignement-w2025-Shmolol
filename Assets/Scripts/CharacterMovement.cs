@@ -7,10 +7,10 @@ public class CharacterMovement : MonoBehaviour
     // ============================== Movement Settings ==============================
     [Header("Movement Settings")]
     [SerializeField]
-    private float baseWalkSpeed = 5f; // Base speed when walking
+    public float baseWalkSpeed = 5f; // Base speed when walking
 
     [SerializeField]
-    private float baseRunSpeed = 8f; // Base speed when running
+    public float baseRunSpeed = 8f; // Base speed when running
 
     [SerializeField]
     private float rotationSpeed = 10f; // Speed at which the character rotates
@@ -21,20 +21,22 @@ public class CharacterMovement : MonoBehaviour
     private float jumpForce = 5f; // Jump force applied to the character
 
     [SerializeField]
-    private float groundCheckDistance = 1.05f; // Distance to check for ground contact (Raycast)
+    private float groundCheckDistance = 0.2f; // Distance to check for ground contact (Raycast)
 
     // ============================== Modifiable from other scripts ==================
-    public float speedMultiplier = 1.0f; // Additional multiplier for character speed ( WINK WINK )
+    public float speedMultiplier = 1.3f; // Additional multiplier for character speed ( WINK WINK )
 
     // ============================== Private Variables ==============================
     public Rigidbody rb; // Reference to the Rigidbody component. (Had to make public for animator)
     private Transform cameraTransform; // Reference to the camera's transform
+    private AudioSource audioSource;
 
     // Input variables
     private float moveX; // Stores horizontal movement input (A/D or Left/Right Arrow)
     private float moveZ; // Stores vertical movement input (W/S or Up/Down Arrow)
     public bool jumpRequest; // Flag to check if the player requested a jump (made public for animator)
     public bool canDoubleJump = false; // Flag to check if the player can double jump (made public for animator)
+    public bool hasPowerUp = false;
     private Vector3 moveDirection; // Stores the calculated movement direction
 
     // ============================== Animation Variables ==============================
@@ -99,6 +101,9 @@ public class CharacterMovement : MonoBehaviour
         // Lock and hide the cursor for better gameplay control
         Cursor.lockState = CursorLockMode.Confined;
         Cursor.visible = false;
+
+        // Initialize the Audio source to be used in the double jump
+        audioSource = GetComponent<AudioSource>();
     }
 
     // ============================== Input Handling ==============================
@@ -180,11 +185,12 @@ public class CharacterMovement : MonoBehaviour
     /// </summary>
     private void HandleDoubleJump() // change so that double jump is only allowed when blue powerup is picked up
     {
-        if (jumpRequest && !IsGrounded && canDoubleJump)
+        if (hasPowerUp && jumpRequest && !IsGrounded && canDoubleJump)
         {
             rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse); // Apply force upwards
             jumpRequest = false; // Reset jump request after applying jump
             canDoubleJump = false; // Disable double jump until player jumps normally
+            audioSource.Play();
         }
     }
 
