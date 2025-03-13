@@ -6,6 +6,7 @@ using UnityEngine;
 public class GameOverController : MonoBehaviour
 {
     public TextMeshProUGUI scoreText;
+    public TextMeshProUGUI timerText;
     public GameObject gameOverPanel;
 
     // Start is called before the first frame update
@@ -16,6 +17,14 @@ public class GameOverController : MonoBehaviour
         if (GameManager.Instance)
         {
             scoreText.text = "Final Score: " + GameManager.Instance.score.ToString();
+            timerText.text =
+                "Final Time: "
+                + GameManager.Instance.currentHours
+                + "h:"
+                + GameManager.Instance.currentMinutes
+                + "m:"
+                + (int)GameManager.Instance.currentSeconds
+                + "s";
         }
     }
 
